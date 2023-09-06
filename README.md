@@ -1,136 +1,43 @@
 # Plasmodium vivax genomes
 
-## Overview of Data
-
-### Daaron et al. paper 2021
-Overview of the different genomes is given in the supplementary table: https://www.science.org/doi/suppl/10.1126/sciadv.abc3713/suppl_file/abc3713_table_s1.xlsx --> now saved in /Users/pmonsieurs/programming/plasmodium_pvgenomes/data/2016.Pearson.list_of_accesionnumbers.PvGV_May2016_sample_data_2.xlsx
-* This database contains data from 12 different sequencing projects, resulting in 1154 P. vivax isolates. The 12 project numbers are PRJEB10888, PRJEB2140, PRJNA175266, PRJNA240356 , PRJNA240452, PRJNA240531, PRJNA271480 , PRJNA284437 , PRJNA350554 , PRJNA420510 , PRJNA432819 , PRJNA65119 
-* Within the article itself, 20 additional genomes from Africa (and isolated from human) are sequences: Mauritania, n = 14; Ethiopia, n = 3; and Sudan, n = 3. Those seem to be grouped in project number PRJNA720520. This project number also contains 10 genome sequences obtained from apes and mosquitoes, which should be omitted. 
-* in total: 1154 + 20 new in human + 10 in other species = 1184 genomes <--> in the excel of the paper only 1181 genomes, so some of them are missing. 
-* list of Daaron et al. also contains Pvivax like genomes. They should be removed from the list, as they are not infecting human hosts. Those are 27 WGS sequences (last lines in the excel file). 
-* some of the accession numbers in Daaron et al are not the same as in the data set of Juie, because Daaron et al sometimes splits them up in different samples, while they should be combined into one sample
-    * Julie has made this distinction. summarized now in "concatenated_list" in /Users/pmonsieurs/programming/plasmodium_pvgenomes/data/julie/Metadata.xlsx
-
-* make comparison between two databases (Daaron vs Julie): [inputdata_compare_db.py](inputdata_compare_db.py)
-    * start from exel file from Daaron et al and compare to the excel file of Julie
-    * two different approach: first check accession numbers in both "main" work sheets, and - if no hit found - check the accession number with the concatenated accession numbers of Julie (second work sheet)
-    * most of the genomes added by Daaron, were already in the list of Juli. Some of them were missed by Julie, and are now added in a separate excel worksheet containing the accession numbers that still needs to be downloaded: Excel file in data directory: 2021.Daron.SupplTableS1.abc3713_table_s1.comparison_with_database_Julie.xlsx --> sheet: samples_to_add_to_Julie. Total number of samples to be added = 267 genomes (8 will be removed - see below)
-        * missed publications:
-            * Shen et al. 2018: China, n=7
-            * Popovici et al. 2018: Cambodia n=55
-            * Pearson et al. 2016: Cambodia n=11
-            * Delgado-ratto et al. 2016: Brazil, n=28
-        * new publications:
-            *  Daaron et al 2021: Ethiopia n=3, Mauritania n=14, Sudan n=3
-            *  Benavente et al 2021: Afghanistan n=22, Bangladesh n=1, Brazil n=27, Eritrea n=12, Ethiopia n=5, Guyana n=3, India n=34, Pakistan n=32, Sudan n=5, Philipinnes n=1, Uganda n=3
-        * new in-house data or collab (!! not included yet in the 267 genomes list)
-            * Erin: 15 samples from clinic (different countries, mainly Africa)
-            * data from Marcello: n= ?? --> contact taken with Thais Crippa to transfer the data
-    * some of the new data are single-end data? 
-        * in total 267 genomes can be added, however only 259 have a *_1.fasta.gz extension which means 8 are missing.
-        * single-end data + they end up to be IonTorrent data: SRR5099324.fastq.gz  SRR5099325.fastq.gz  SRR5099326.fastq.gz  SRR5278291.fastq.gz  SRR5278293.fastq.gz  SRR5278295.fastq.gz  SRR5278298.fastq.gz  SRR5278301.fastq.gz. Remarkably, they ended up in the final .vcf file of Julie --> remove from master file
-
-### MalariaGen paper (2022)
-* based on file: /Users/pmonsieurs/programming/plasmodium_pvgenomes/data/MalariaGen_PV_samples.xlsx, which is a copy paste from the meta data from the paper. 
-* Which samples added? Different steps in selection: 
-	* Select only the samples where the counterpart in Julie is empty (column P)
-	* Only select those samples that survived the QC criteria, i.e. exclusion reason = Analysis_set
-    * Only select samples for which the ENA accession number is given.
-    * removal of the samples of Huppalo, as those 6 samples are already in Julie's dataset
-    * 535 genomes are retained
-* all those samples are summarised in the last tab of the excel file
-    * tab: genomes_add_to_master
-    * in total 571 datasets can be downloaded (should be 575)
-        * for 20 samples [row 101 + row 454-472], three accession numbers are found = 40 additional dataset
-        * 571  - 40 = 531 datasets left <--> should be 535: 4 datasets are missed between row 101 and 200
-    * put accession numbers into SRA-explorer, in batches of ~ 100, and put in "saved dataset"
-        * when creating download links: 567 download links found, i.e. another 4 accession numbers lost
-* download fastq files based on the download links created with SRA explorer
-    * !! OBSOLETE!! trying to download the data by using atools combined with wget [inputdata_download_from_SRA.slurm](inputdata_download_from_SRA.slurm), however this leads to frequent crasehs. Seems that only one connection can be made between a node and the EBI server, all other connections are refused.
-    * using a basic solution: splitting up the big URL file into different smaller files [input_download_from_SRA_batches.sh](input_download_from_SRA_batches.sh)
-        * run the download using a simple for loop for each of the different batches
-* track the missing accession numbers: some of the accession numbers are not found when running SRA explorer, and for others the URLs are not found
-    * find missing accession numbers: [inputdata_download_find_missing_malariagen.py](inputdata_download_find_missing_malariagen.py)
-    * after running again this list of 8 accession numbers (ERR2299660,ERR925422,ERR925423,ERR925429,ERR1035495,ERR2309737,ERR2299732,ERR2299718), 7 are recovered but one is still missing: ERR2299660
-    * after downloading all the ftp-URLs, total number of files downloaded is 1148 = 574 datasets of paired fastq file
-        * 535 genomes of which 20 with 3 accession numbers = 575 R1 fastq files
-        * only 574 R1 fastq files found as one accession number (ERR2299660 - sampleID PY0130-C) is missing. FastQ is also not available when chekcing online: https://www.ebi.ac.uk/ena/browser/view/ERR2299660 --> fastq column: "unavailable"
+## Input data
 * combined the fastq-file which are coming from multiple accession numbers: 
     * [inputdata_download_concate_multiple.py](inputdata_download_concate_multiple.py)
     * this script also moves some files between the source directories and some newly created. 
-    * after moving concatenated fastqfiles again to the source directory, and afterwards check again whether then number of R1 reads is sufficient --> 535 genomes with one accession number continously failing = 534 genomes
+* overview of all sequencing data is given in the pvgenomes_master.xlsx excel file
+
+## BWA and GATK
+* Run BWA [BWA_run.sh](BWA_run.sh)
+    * first map versus the human genome, and only take those reads not properly mapping
+    * map remaining reads versus P. vivax P01 genome (version 46 of PlasmoDB)
+* Remove samples with less than 50% of the genome covered by at least 5x reads
+    * calculate percentage [BWA_QC_percentage_mapped.sh](BWA_QC_percentage_mapped.sh)
+    * based on the percentages calculated, do filtering to remove low-quality genomes [BWA_QC_percentage_mapped_filter.sh](BWA_QC_percentage_mapped_filter.sh)
 
 
-
-### Map metadata julie to VCF files ###
-* The Metadata.xlsx file of Julie contains all metadata information (country, accessionnumbers(s), etc.) from the different samples. However, there is not always a direct link between the metadata file and the name of the vcf-file. Moreover, in the overal / combined vcf file, the name of the vcf file has been replaced by a more meaningful name e.g. Pearson_Vietnam_3
-    * in most cases, the accesssion number is the link between both files
-    * however, when multiple accession numbers are linking to the same sample, sometimes a new name is given to the .vcf file 
-    * also, for the inhouse samples the naming cannot follow the accession number rule, as they have not yet been uploaded to NCBI-SRA
-* once the metadata file has been updated, a newly compiled metadata can be produced. 
-* !! data of Pearson et al: old accession numbers, not used anymore. Difficult to map to new accession numbers, which was used in subsequent steps by Julie but no mapping. Paper of G. Spath on GIP brought the solution: https://www.biorxiv.org/content/10.1101/2021.06.15.448580v1
-* Metadata.xlsx adapted: added additional columsn to store the mapping to the .vcf and the new sample names used in th merged .vcf file
-    * used MetaData.xslx as source for a new metadata file
-
-
-
-### create new master file
-* new file created: PvGenomes_Master.xlsx
-    * remove all samples with NA value in the vcf_old (this means those samples do not have a vcf file in the output of Julie)
-        * 6 NAs deleted from sample data as no counterpart in vcf files
-    * still one more in sample file than in vcf files --> duplicate? 
-
-### new data
-* New data recovered from the Daaron paper + new papers published in 2021 / end of 2020
-    * All the fastq-file R1 files are used as input for running BWA. BWA is run in 2 times, one time versus the human genome, and the second time using the Pvivax reference genome using all reads that did not map to the human genome. For now, those data have been stored in the directory 
-    * [BWA_run.sh](BWA_run.sh): run BWA based on the first read fastq file
-    * Some of the input data are too big to be run within one hour, and should be moved to 24h queue. This initially causes a crash of the run, and recovering of the missed accession numbers using [BWA_recover_crashed.py](BWA_recover_crashed.py). Afterwards rerun the [BWA_run.sh](BWA_run.sh) but with a time of 23:59:00.
-* New genomes Erin from clinic
-    * make symbolic links based on the internal ID with the genomeScan IDs, and make sure to continue on the syntax of using _1.fastq.gz and _2.fastq.gz: [inputdata_prepareinput_erin.py](inputdata_prepareinput_erin.py)
-    * once symbolic links are made, BWA can be run with the script developed before [BWA_run.sh](BWA_run.sh)
-* New genomes from Brazil (Marcelo)
-    * convert the unaligned bam-files to fastq files: [inputdata_prepareinput_marcelo_bam2fastq.sh](inputdata_prepareinput_marcelo_bam2fastq.sh)
-    * make symbolic links [inputdata_prepareinput_marcelo_makelinks.sh](inputdata_prepareinput_marcelo_makelinks.sh)
-* Data from Julie:
-    * move all data from Julie (ordered in different subdirectories) into one flat directory: [inputdata_julie_filemanagement.sh](inputdata_julie_filemanagement.sh)
-* new data from MalariaGen publication (2022)
-    * [BWA_run.sh](BWA_run.sh): run BWA based on the first read fastq file
-
-
-### reschedule files and MarkDuplicates
-* MarkDuplicates has not been run for all samples. Moreover, the bam files of Julie are needed to do a QC of the different genomes (requiring that at least 50% of the genome is covered 5x)
-    * map the different .bam files in the results directory to the correct sample: [inputdata_julie_map_metadata_to_bam.py](inputdata_julie_map_metadata_to_bam.py)
-    * based on this output [/user/antwerpen/205/vsc20587/scratch/plasmodium_pvgenomes/data/mapping_masterdata_to_bam.csv] move all bam files to a bam_master directory
-        * for the files where no markDuplicates has been run: run mark duplicates and save output in this directory
-        * [GATK_markdups.sh](GATK_markdups.sh)
-        * afterwards, check whether all sampleIDs are represented in the bam_master directory [GATK_markdups_checkfiles.py](GATK_markdups_checkfiles.py) --> can be recycled for checking all sampleIDs (also the ones from Julie)
-* for the .bam files of Julie received from Katlijn (where MarkDuplicates is alreayd performed), the files are moved and renamed to the bam_master directory
-    * move bam files to bam_master: [inputdata_julie_movebamfiles.py](inputdata_julie_movebamfiles.py). Also copy the .bai file (index files)
-    * QC check: when checking bai-files, some were missing. Trying to redo them, and running `samtools quickcheck -v *.bam` showed that some .bam files were empty (received from Katlijn)
-    * for those 64 files, re-copy from Katlijn, and add to the master_bam directory: [inputdata_julie_movebamfiles_missing.py](inputdata_julie_movebamfiles_missing.py)
-    * afterwards run sanity check: [GATK_markdups_checkfiles.py](GATK_markdups_checkfiles.py) -> contains 1533 bam-files, only Pv21-19 is missing
-    * also run again `samtools quickcheck -v *.bam`
-    
-
-### location information
-* Latitude and longitude information can be useful to finetune the geographical spread
-    * try to move the information in the MalariaGen paper to the master excel-file
-    * metadata of MalariaGen paper downloaded from https://www.malariagen.net/data/open-dataset-plasmodium-vivax-v4.0 into /Users/pmonsieurs/programming/plasmodium_pvgenomes/data/metadata_2022_malariagen.xlsx
-    * mapping can be done based on the sample_ids
-    * python script for mapping: [inputdata_get_geolocation.py](inputdata_get_geolocation.py)
-    * merge data with MalariaGen, and use this information for longitude and latitude. 
-        * if no match with MalariaGen, copy paste from MalariaGen, or look up on web
-        * indicated with separate column whether inherited from MalariaGen or manually added
-        * also: sometimes different positions merges, e.g. the different Peru samples
-* map information on geographical map
+## location information
+* Latitude and longitude information can be useful to finetune the geographical spread: python script for mapping: [inputdata_get_geolocation.py](inputdata_get_geolocation.py)
+* map information on geographical map: show the total number of genomes available per country on a world wide map
     * update the R code [geomap_genomes.R](geomap_genomes.R)
     * now also plot circles based on coordinate (lat / long) give from metadata --> more finegrained view on the P vivax genomes in South-America
+* same for the genomes in South-America, but now not one data point per country, but count given based on the availability of the longitude and latitude of the sampling. 
     
-### Create subgroups 
-* create group with only the samples from the Americas (+ maybe Americas + Africa?)
+## Create vcf file for South-America only 
+* create group with only the samples from the Americas
     * only select the samples coming from America (SAM) bases on sample IDs
     * [GATK_filter_bcftools_percontinent.sh](GATK_filter_bcftools_percontinent.sh)
 * afterwards, concatenate the vcf files coming from different chromosomes. Use the code as already implmented in [GATK_filter_bcftools_concat.sh](GATK_filter_bcftools_concat.sh) where new code is added to run per continent
+
+
+
+## Submission of the data to EVA repository of EBI
+* chromosome names in the initial vcf file are taken from the PlasmoDB v46 genome. However, EBI requires mapping versus the genome assembly as available in RefSeq database: [EVA_update_chromosome_names.sh](EVA_update_chromosome_names.sh)
+* concatenate all chromosomes into one overall vcf file: [EVA_bcftools_concat_chromosomes.sh](EVA_bcftools_concat_chromosomes.sh)
+* remove the PL field in the vcf-fields as not requested by EVA: [EVA_bcftools_remove_PLfield.sh](EVA_bcftools_remove_PLfield.sh)
+* EVA requires the BioSample accession number (not the run accession number), so run accession numbers need to be converted to BioSample accession number: [EVA_convert_runaccession_to_biosample.py](EVA_convert_runaccession_to_biosample.py)
+* check validitiy of the vcf file using the vcf_validator tool of EBI: [EVA_vcf_validator.slurm](EVA_vcf_validator.slurm)
+
+
 
 
 ### procedure to add new data sets
@@ -149,24 +56,11 @@ Overview of the different genomes is given in the supplementary table: https://w
 ### BWA & GATK
 * BWA
     * first against human, and non-proper paired reads realigned to Pvivax genomes
-    * [BWA_run.sh](BWA_run.sh)
-    * to be added: script to move bam-files from temporary directory to master directory!!
-    * check the number of missing samples using [BWA_check_missing.py](BWA_check_missing.py)
-        * 20230109: Pv21-19 missing (sample Peru from Katlijn)
-
+    * [BWA_run.sh](BWA_run.sh) (including filtering of duplicated reads)
 * GATK: 
-    * Old approach (obsolete!!): 
-        * [GATK_run.slurm](GATK_run.slurm): create one big g.vcf file per sample
-        * split one gvcf file over a per chromosome file, to make merging and genotyping of the different files easier
-            * [GATK_split_gvcf.slurm](GATK_split_gvcf.slurm)
-            * Results in one directory per chromosome, where each subsequent analysis is performed on a per chromosome-basis
-    * New approach: 
-        * remove duplidates from the bam file [GATK_markdups.sh](GATK_markdups.sh)
-        * run GATK directly per chrom, and write to directory per crhom in output diretory /user/antwerpen/205/vsc20587/scratch/plasmodium_pvgenomes/results/gvcf_master/
-        * script: [GATK_run_perchrom.slurm](GATK_run_perchrom.slurm)
-        * afterwards do QC on the gvcf files: [GATK_run_perchrom_checkintegrity.sh](GATK_run_perchrom_checkintegrity.sh)
-
-
+    * run GATK directly per chrom, and write to directory per crhom in output diretory /user/antwerpen/205/vsc20587/scratch/plasmodium_pvgenomes/results/gvcf_master/
+    * script: [GATK_run_perchrom.slurm](GATK_run_perchrom.slurm)
+    * afterwards do QC on the gvcf files: [GATK_run_perchrom_checkintegrity.sh](GATK_run_perchrom_checkintegrity.sh)
 * combining gvcf files and do genotyping
     * !!OLD!! genotyping the combined gvcfs - !!!OLD!!! approach: 
         * combine all gvcf files: [GATK_combinegvcfs.slurm](GATK_combinegvcfs.slurm)
